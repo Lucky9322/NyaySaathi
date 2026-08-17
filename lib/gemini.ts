@@ -1,8 +1,23 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import fs from 'fs';
 import path from 'path';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+// Primary and fallback models supported by Google Generative AI
+const SUPPORTED_FLASH_MODELS = [
+  'gemini-3.5-flash',
+  'gemini-3.6-flash',
+  'gemini-3.5-flash-lite',
+  'gemini-3.1-flash-lite',
+  'gemini-flash-latest',
+] as const;
+
+function getGenAI(): GoogleGenerativeAI {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY is not configured in environment variables (.env.local)');
+  }
+  return new GoogleGenerativeAI(apiKey);
+}
 
 export function getLegalKnowledge(): string {
   try {
@@ -29,8 +44,8 @@ export function getSystemPrompt(language: string): string {
 CRITICAL RULES:
 1. NEVER invent or fabricate laws, sections, deadlines, or legal procedures.
 2. ALWAYS state clearly that you provide general information, NOT legal advice.
-3. For serious legal matters, ALWAYS recommend consulting a qualified lawyer.
-4. Only cite laws and sections that are mentioned in the knowledge base below.
+3. For serious legal matters, ALWAYS recommend consulting a qualified lawyer or contacting NALSA (15100).
+4. Only cite laws and sections that are established in Indian law or mentioned in the knowledge base below.
 5. Be compassionate and empathetic — many users are in distress.
 6. Use simple language that common citizens can understand.
 7. ${langInstruction}
@@ -52,25 +67,76 @@ ${legalKnowledge}
 Remember: You are helping Indian citizens understand their rights. Be their साथी (companion/friend) in navigating the legal system.`;
 }
 
+const DEFAULT_SAFETY_SETTINGS = [
+  {
+    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+  },
+];
+
+/**
+ * Executes a Gemini generation with fallback cascade across supported Flash models.
+ */
+async function executeWithModelFallback<T>(
+  fn: (modelName: string) => Promise<T>
+): Promise<T> {
+  let lastError: Error | null = null;
+
+  for (const modelName of SUPPORTED_FLASH_MODELS) {
+    try {
+      return await fn(modelName);
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      console.warn(`[Gemini] Execution with model ${modelName} failed: ${error.message}. Attempting fallback...`);
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error('All Gemini model fallbacks failed.');
+}
+
 export async function generateChatResponse(
   messages: { role: 'user' | 'model'; parts: string }[],
   language: string
 ): Promise<string> {
-  const model = genAI.getGenerativeModel({ 
-    model: 'gemini-2.5-flash',
-    systemInstruction: getSystemPrompt(language),
-  });
+  const genAI = getGenAI();
+  const systemInstruction = getSystemPrompt(language);
 
-  const chat = model.startChat({
-    history: messages.slice(0, -1).map(m => ({
-      role: m.role,
-      parts: [{ text: m.parts }],
-    })),
-  });
+  return executeWithModelFallback(async (modelName) => {
+    const model = genAI.getGenerativeModel({
+      model: modelName,
+      systemInstruction,
+      generationConfig: {
+        temperature: 0.4,
+        topP: 0.95,
+        maxOutputTokens: 2048,
+      },
+      safetySettings: DEFAULT_SAFETY_SETTINGS,
+    });
 
-  const lastMessage = messages[messages.length - 1];
-  const result = await chat.sendMessage(lastMessage.parts);
-  return result.response.text();
+    const chat = model.startChat({
+      history: messages.slice(0, -1).map(m => ({
+        role: m.role,
+        parts: [{ text: m.parts }],
+      })),
+    });
+
+    const lastMessage = messages[messages.length - 1];
+    const result = await chat.sendMessage(lastMessage.parts);
+    return result.response.text();
+  });
 }
 
 export async function generateRTIApplication(data: {
@@ -82,7 +148,7 @@ export async function generateRTIApplication(data: {
   informationSought: string;
   language: string;
 }): Promise<string> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const genAI = getGenAI();
 
   const prompt = `Generate a formal RTI (Right to Information) application in ${data.language === 'mr' ? 'Marathi' : data.language === 'hi' ? 'Hindi' : 'English'} for the following details:
 
@@ -106,8 +172,19 @@ Generate a properly formatted RTI application letter that:
 
 Format it as a proper letter. Do NOT include any explanations outside the letter itself.`;
 
-  const result = await model.generateContent(prompt);
-  return result.response.text();
+  return executeWithModelFallback(async (modelName) => {
+    const model = genAI.getGenerativeModel({
+      model: modelName,
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 2048,
+      },
+      safetySettings: DEFAULT_SAFETY_SETTINGS,
+    });
+
+    const result = await model.generateContent(prompt);
+    return result.response.text();
+  });
 }
 
 export async function generatePoliceComplaint(data: {
@@ -121,7 +198,7 @@ export async function generatePoliceComplaint(data: {
   witnesses?: string;
   language: string;
 }): Promise<string> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const genAI = getGenAI();
 
   const prompt = `Generate a formal police complaint letter in ${data.language === 'mr' ? 'Marathi' : data.language === 'hi' ? 'Hindi' : 'English'} for the following:
 
@@ -146,6 +223,17 @@ Generate a properly formatted police complaint/FIR application that:
 
 Format as a proper formal letter. Do NOT include explanations outside the letter.`;
 
-  const result = await model.generateContent(prompt);
-  return result.response.text();
+  return executeWithModelFallback(async (modelName) => {
+    const model = genAI.getGenerativeModel({
+      model: modelName,
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 2048,
+      },
+      safetySettings: DEFAULT_SAFETY_SETTINGS,
+    });
+
+    const result = await model.generateContent(prompt);
+    return result.response.text();
+  });
 }

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { FileText, Download, Edit, ChevronRight, ChevronLeft, Check, AlertTriangle, Copy, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/lib/language-context';
 import { t } from '@/lib/translations';
+import { saveDocumentDraft } from '@/lib/session';
 
 interface RTIFormData {
   applicantName: string;
@@ -73,6 +74,14 @@ export default function RTIPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setGeneratedText(data.application);
+      // Persist to session for dashboard history
+      saveDocumentDraft({
+        type: 'rti',
+        title: `RTI to ${formData.department || 'Government Department'}`,
+        department: formData.department,
+        language: language as 'en' | 'hi' | 'mr',
+        preview: data.application.slice(0, 120),
+      });
       setStep(3);
     } catch (err) {
       setError(err instanceof Error ? err.message : t(language, 'processingError'));
@@ -142,12 +151,15 @@ export default function RTIPage() {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center"
+            style={{ background: '#1d4ed8' }}
+          >
             <FileText className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="font-bold text-white text-xl">{t(language, 'rtiTitle')}</h1>
-            <p className="text-white/50 text-sm">{t(language, 'rtiSubtitle')}</p>
+            <h1 className="font-bold text-gray-900 text-xl">{t(language, 'rtiTitle')}</h1>
+            <p className="text-gray-500 text-sm">{t(language, 'rtiSubtitle')}</p>
           </div>
         </div>
 
@@ -155,13 +167,17 @@ export default function RTIPage() {
         <div className="flex items-center gap-2 mt-4">
           {[1, 2, 3].map(s => (
             <div key={s} className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${step >= s ? 'bg-blue-500 text-white' : 'bg-white/10 text-white/40'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all border ${
+                step >= s
+                  ? 'bg-blue-700 text-white border-blue-700'
+                  : 'bg-white text-gray-300 border-gray-200'
+              }`}>
                 {step > s ? <Check className="w-4 h-4" /> : s}
               </div>
-              {s < 3 && <div className={`h-0.5 w-12 sm:w-20 rounded transition-all ${step > s ? 'bg-blue-500' : 'bg-white/10'}`} />}
+              {s < 3 && <div className={`h-0.5 w-12 sm:w-20 rounded transition-all ${step > s ? 'bg-blue-700' : 'bg-gray-200'}`} />}
             </div>
           ))}
-          <span className="ml-2 text-white/40 text-xs">
+          <span className="ml-2 text-gray-400 text-xs">
             {t(language, 'step')} {step} {t(language, 'of')} {totalSteps}
           </span>
         </div>
@@ -170,22 +186,24 @@ export default function RTIPage() {
       {/* Step Labels */}
       <div className="grid grid-cols-3 gap-2 mb-6 text-center">
         {[t(language, 'yourDetails'), t(language, 'informationDetails'), t(language, 'review')].map((label, i) => (
-          <div key={i} className={`text-xs font-medium ${step === i + 1 ? 'text-blue-400' : step > i + 1 ? 'text-white/50' : 'text-white/20'}`}>
+          <div key={i} className={`text-xs font-medium ${
+            step === i + 1 ? 'text-blue-700' : step > i + 1 ? 'text-gray-400' : 'text-gray-300'
+          }`}>
             {label}
           </div>
         ))}
       </div>
 
       {/* Disclaimer */}
-      <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-3 flex items-start gap-2 mb-6">
-        <AlertTriangle className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
-        <p className="text-yellow-200/70 text-xs">{t(language, 'disclaimer')}</p>
+      <div className="alert-warning mb-6">
+        <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+        <p>{t(language, 'disclaimer')}</p>
       </div>
 
       {/* Step 1: Personal Details */}
       {step === 1 && (
         <div className="card p-6 space-y-4">
-          <h2 className="font-semibold text-white mb-4">{t(language, 'yourDetails')}</h2>
+          <h2 className="font-semibold text-gray-900 mb-4">{t(language, 'yourDetails')}</h2>
           <div>
             <label className="label">{t(language, 'name')} *</label>
             <input
@@ -232,7 +250,7 @@ export default function RTIPage() {
       {/* Step 2: Information Details */}
       {step === 2 && (
         <div className="card p-6 space-y-4">
-          <h2 className="font-semibold text-white mb-4">{t(language, 'informationDetails')}</h2>
+          <h2 className="font-semibold text-gray-900 mb-4">{t(language, 'informationDetails')}</h2>
           <div>
             <label className="label">{t(language, 'department')} *</label>
             <input
@@ -247,7 +265,11 @@ export default function RTIPage() {
                 <button
                   key={dept}
                   onClick={() => update('department', dept)}
-                  className={`text-xs px-2.5 py-1 rounded-lg border transition-all ${formData.department === dept ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white'}`}
+                  className={`text-xs px-2.5 py-1 rounded border transition-all ${
+                    formData.department === dept
+                      ? 'bg-blue-50 border-blue-300 text-blue-700'
+                      : 'bg-white border-gray-200 text-gray-500 hover:border-gray-400 hover:text-gray-700'
+                  }`}
                 >
                   {dept}
                 </button>
@@ -269,7 +291,7 @@ export default function RTIPage() {
                   : 'Clearly describe the information you need. e.g:\n1. What is the approved budget for road repairs in our ward?\n2. When was it approved and how much has been spent?'
               }
             />
-            <p className="text-white/30 text-xs mt-1">
+            <p className="text-gray-400 text-xs mt-1">
               {language === 'mr' ? '💡 जितके विशिष्ट प्रश्न तितकी चांगली उत्तरे मिळतात' : language === 'hi' ? '💡 जितने विशिष्ट सवाल, उतना अच्छा जवाब' : '💡 Tip: More specific questions get better responses'}
             </p>
           </div>
@@ -281,12 +303,12 @@ export default function RTIPage() {
         <div className="space-y-4">
           {loading && (
             <div className="card p-12 text-center">
-              <Loader2 className="w-8 h-8 text-blue-400 animate-spin mx-auto mb-3" />
-              <p className="text-white/60">{t(language, 'generating')}</p>
+              <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" />
+              <p className="text-gray-500">{t(language, 'generating')}</p>
             </div>
           )}
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-300 text-sm flex items-start gap-2">
+            <div className="alert-error">
               <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
@@ -294,7 +316,7 @@ export default function RTIPage() {
           {generatedText && !loading && (
             <div className="card p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-semibold text-white">
+                <h2 className="font-semibold text-gray-900">
                   {language === 'mr' ? 'तयार RTI अर्ज' : language === 'hi' ? 'तैयार RTI आवेदन' : 'Generated RTI Application'}
                 </h2>
                 <div className="flex gap-2">
@@ -323,13 +345,13 @@ export default function RTIPage() {
                   rows={20}
                 />
               ) : (
-                <pre className="whitespace-pre-wrap font-sans text-sm text-white/80 leading-relaxed bg-white/3 p-4 rounded-xl border border-white/5 max-h-96 overflow-y-auto">
+                <pre className="whitespace-pre-wrap font-sans text-sm text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-200 max-h-96 overflow-y-auto">
                   {generatedText}
                 </pre>
               )}
 
-              <div className="mt-4 p-3 bg-blue-500/5 border border-blue-500/20 rounded-xl">
-                <p className="text-blue-300/80 text-xs">
+              <div className="mt-4 alert-info">
+                <p>
                   {language === 'mr'
                     ? '📋 हा अर्ज प्रिंट करून PIО ला पाठवा. केंद्र सरकार विभागासाठी rtionline.gov.in वर ऑनलाइन देखील दाखल करा. ₹10 IPO किंवा DD सोबत जोडा.'
                     : language === 'hi'
@@ -394,8 +416,8 @@ export default function RTIPage() {
             { label: language === 'mr' ? '🏛️ अपील' : language === 'hi' ? '🏛️ अपील' : '🏛️ Appeal', value: '30 days more' },
           ].map(({ label, value }) => (
             <div key={label} className="card p-4 text-center">
-              <p className="text-xs text-white/50 mb-1">{label}</p>
-              <p className="font-bold text-orange-400">{value}</p>
+              <p className="text-xs text-gray-500 mb-1">{label}</p>
+              <p className="font-bold text-blue-700">{value}</p>
             </div>
           ))}
         </div>

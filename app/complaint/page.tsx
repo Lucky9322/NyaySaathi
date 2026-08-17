@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { AlertCircle, Download, Edit, ChevronRight, ChevronLeft, Check, AlertTriangle, Copy, Loader2, Phone } from 'lucide-react';
 import { useLanguage } from '@/lib/language-context';
 import { t } from '@/lib/translations';
+import { saveDocumentDraft } from '@/lib/session';
 
 interface ComplaintFormData {
   complainantName: string;
@@ -55,6 +56,14 @@ export default function ComplaintPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setGeneratedText(data.complaint);
+      // Persist to session for dashboard history
+      saveDocumentDraft({
+        type: 'complaint',
+        title: `Police Complaint — ${formData.incidentLocation || 'Unknown Location'}`,
+        department: formData.incidentLocation,
+        language: language as 'en' | 'hi' | 'mr',
+        preview: data.complaint.slice(0, 120),
+      });
       setStep(3);
     } catch (err) {
       setError(err instanceof Error ? err.message : t(language, 'processingError'));
@@ -126,12 +135,15 @@ export default function ComplaintPage() {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center">
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center"
+            style={{ background: '#dc2626' }}
+          >
             <AlertCircle className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="font-bold text-white text-xl">{t(language, 'complaintTitle')}</h1>
-            <p className="text-white/50 text-sm">{t(language, 'complaintSubtitle')}</p>
+            <h1 className="font-bold text-gray-900 text-xl">{t(language, 'complaintTitle')}</h1>
+            <p className="text-gray-500 text-sm">{t(language, 'complaintSubtitle')}</p>
           </div>
         </div>
 
@@ -139,13 +151,17 @@ export default function ComplaintPage() {
         <div className="flex items-center gap-2 mt-4">
           {[1, 2, 3].map(s => (
             <div key={s} className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${step >= s ? 'bg-red-500 text-white' : 'bg-white/10 text-white/40'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all border ${
+                step >= s
+                  ? 'bg-red-600 text-white border-red-700'
+                  : 'bg-white text-gray-300 border-gray-200'
+              }`}>
                 {step > s ? <Check className="w-4 h-4" /> : s}
               </div>
-              {s < 3 && <div className={`h-0.5 w-12 sm:w-20 rounded transition-all ${step > s ? 'bg-red-500' : 'bg-white/10'}`} />}
+              {s < 3 && <div className={`h-0.5 w-12 sm:w-20 rounded transition-all ${step > s ? 'bg-red-600' : 'bg-gray-200'}`} />}
             </div>
           ))}
-          <span className="ml-2 text-white/40 text-xs">
+          <span className="ml-2 text-gray-400 text-xs">
             {t(language, 'step')} {step} {t(language, 'of')} 3
           </span>
         </div>
@@ -154,21 +170,23 @@ export default function ComplaintPage() {
       {/* Step Labels */}
       <div className="grid grid-cols-3 gap-2 mb-6 text-center">
         {stepLabels.map((label, i) => (
-          <div key={i} className={`text-xs font-medium ${step === i + 1 ? 'text-red-400' : step > i + 1 ? 'text-white/50' : 'text-white/20'}`}>
+          <div key={i} className={`text-xs font-medium ${
+            step === i + 1 ? 'text-red-700' : step > i + 1 ? 'text-gray-400' : 'text-gray-300'
+          }`}>
             {label}
           </div>
         ))}
       </div>
 
       {/* Safety Notice */}
-      <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4 mb-6">
+      <div className="alert-error mb-6">
         <div className="flex items-start gap-2">
-          <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+          <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-red-200/80 text-sm font-medium mb-1">
+            <p className="text-red-800 text-sm font-medium mb-1">
               {language === 'mr' ? 'महत्त्वाची सूचना' : language === 'hi' ? 'महत्वपूर्ण सूचना' : 'Important Notice'}
             </p>
-            <p className="text-red-200/60 text-xs">
+            <p className="text-red-700 text-xs">
               {language === 'mr'
                 ? 'हे साधन FIR मसुदा तयार करण्यासाठी आहे. प्रत्यक्ष FIR नोंदवण्यासाठी पोलिस ठाण्यात जाणे आवश्यक आहे. आपत्कालीन परिस्थितीत 100 वर कॉल करा.'
                 : language === 'hi'
@@ -176,8 +194,8 @@ export default function ComplaintPage() {
                 : 'This tool helps draft a complaint. To register an actual FIR, you must visit the police station in person. In emergencies, call 100.'}
             </p>
             <div className="flex items-center gap-4 mt-2">
-              <span className="text-xs text-red-300 font-medium flex items-center gap-1"><Phone className="w-3 h-3" /> Police: 100</span>
-              <span className="text-xs text-red-300 font-medium flex items-center gap-1"><Phone className="w-3 h-3" /> Women: 1091</span>
+              <span className="text-xs text-red-700 font-medium flex items-center gap-1"><Phone className="w-3 h-3" /> Police: 100</span>
+              <span className="text-xs text-red-700 font-medium flex items-center gap-1"><Phone className="w-3 h-3" /> Women: 1091</span>
             </div>
           </div>
         </div>
@@ -186,7 +204,7 @@ export default function ComplaintPage() {
       {/* Step 1: Personal Details */}
       {step === 1 && (
         <div className="card p-6 space-y-4">
-          <h2 className="font-semibold text-white mb-4">{t(language, 'yourDetails')}</h2>
+          <h2 className="font-semibold text-gray-900 mb-4">{t(language, 'yourDetails')}</h2>
           <div>
             <label className="label">{t(language, 'name')} *</label>
             <input type="text" value={formData.complainantName} onChange={e => update('complainantName', e.target.value)} className="input-field"
@@ -207,7 +225,7 @@ export default function ComplaintPage() {
       {/* Step 2: Incident Details */}
       {step === 2 && (
         <div className="card p-6 space-y-4">
-          <h2 className="font-semibold text-white mb-4">
+          <h2 className="font-semibold text-gray-900 mb-4">
             {language === 'mr' ? 'घटनेचा तपशील' : language === 'hi' ? 'घटना का विवरण' : 'Incident Details'}
           </h2>
           <div className="grid sm:grid-cols-2 gap-4">
@@ -245,12 +263,12 @@ export default function ComplaintPage() {
         <div className="space-y-4">
           {loading && (
             <div className="card p-12 text-center">
-              <Loader2 className="w-8 h-8 text-red-400 animate-spin mx-auto mb-3" />
-              <p className="text-white/60">{t(language, 'generating')}</p>
+              <Loader2 className="w-8 h-8 text-red-600 animate-spin mx-auto mb-3" />
+              <p className="text-gray-500">{t(language, 'generating')}</p>
             </div>
           )}
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-300 text-sm flex items-start gap-2">
+            <div className="alert-error">
               <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
@@ -258,7 +276,7 @@ export default function ComplaintPage() {
           {generatedText && !loading && (
             <div className="card p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-semibold text-white">
+                <h2 className="font-semibold text-gray-900">
                   {language === 'mr' ? 'तयार तक्रार मसुदा' : language === 'hi' ? 'तैयार शिकायत प्रारूप' : 'Generated Complaint Draft'}
                 </h2>
                 <div className="flex gap-2">
@@ -275,14 +293,14 @@ export default function ComplaintPage() {
               {isEditing ? (
                 <textarea value={generatedText} onChange={e => setGeneratedText(e.target.value)} className="textarea-field font-mono text-sm w-full" rows={20} />
               ) : (
-                <pre className="whitespace-pre-wrap font-sans text-sm text-white/80 leading-relaxed bg-white/3 p-4 rounded-xl border border-white/5 max-h-96 overflow-y-auto">
+                <pre className="whitespace-pre-wrap font-sans text-sm text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-200 max-h-96 overflow-y-auto">
                   {generatedText}
                 </pre>
               )}
-              <div className="mt-4 p-3 bg-red-500/5 border border-red-500/20 rounded-xl">
-                <p className="text-red-300/80 text-xs">
+              <div className="mt-4 alert-warning">
+                <p>
                   {language === 'mr'
-                    ? '🚔 हा मसुदा घेऊन स्थानिक पोलिस ठाण्यात जा. SHO कडे FIR नोंदवण्याची विनंती करा. FIR ची मोफत प्रत मागण्याचा तुम्हाला अधिकार आहे.'
+                    ? '🚔 हा मसुदा घेउन स्थानिक पोलिस ठाण्यात जा. SHO कडे FIR नोंदवण्याची विनंती करा. FIR ची मोफत प्रत मागण्याचा तुम्हाला अधिकार आहे.'
                     : language === 'hi'
                     ? '🚔 यह ड्राफ्ट लेकर स्थानीय पुलिस स्टेशन जाएं। SHO से FIR दर्ज करने का अनुरोध करें। FIR की मुफ्त कॉपी मांगना आपका अधिकार है।'
                     : '🚔 Take this draft to your local police station. Request the SHO to register an FIR. You have the right to a free copy of the FIR.'}

@@ -1,19 +1,57 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,400&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Design Tokens ─────────────────────────────────────────────────────────── */
 :root {
-  --color-saffron: #FF9933;
-  --color-green: #138808;
-  --color-navy: #000080;
-  --gradient-primary: linear-gradient(135deg, #FF9933 0%, #e64535 50%, #000080 100%);
-  --gradient-hero: linear-gradient(135deg, #1a0533 0%, #0a1628 40%, #0f2744 100%);
-  --gradient-card: linear-gradient(135deg, rgba(255,153,51,0.1) 0%, rgba(230,69,53,0.05) 100%);
+  /* Backgrounds — white / soft grey / light surfaces */
+  --bg-base:     #f5f6f8;
+  --bg-elevated: #ffffff;
+  --bg-card:     #ffffff;
+  --bg-surface:  #f1f3f6;
+  --bg-hover:    #eef0f4;
+  --bg-subtle:   #f8f9fb;
+
+  /* Borders */
+  --border-subtle:  #e8eaed;
+  --border-default: #d1d5db;
+  --border-strong:  #9ca3af;
+  --border-accent:  rgba(29,78,216,0.25);
+
+  /* Blue Accent (Primary) — used sparingly */
+  --blue-50:  #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-800: #1e40af;
+
+  /* Saffron (Indian Identity) */
+  --saffron:     #d97706;
+  --saffron-dim: rgba(217,119,6,0.10);
+
+  /* Text — charcoal hierarchy */
+  --text-primary:   #111827;
+  --text-secondary: #374151;
+  --text-muted:     #6b7280;
+  --text-subtle:    #9ca3af;
+  --text-accent:    #2563eb;
+
+  /* Semantic */
+  --green:  #16a34a;
+  --red:    #dc2626;
+  --yellow: #d97706;
+
+  /* Shadow — natural, very subtle */
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 8px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 8px 20px rgba(0,0,0,0.08), 0 4px 8px rgba(0,0,0,0.04);
 }
 
-* {
+/* ─── Base Reset ────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -21,42 +59,102 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   font-family: 'Inter', 'Noto Sans Devanagari', system-ui, sans-serif;
-  background-color: #0a0d1a;
-  color: #e8eaf6;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
   min-height: 100vh;
+  line-height: 1.6;
+  font-size: 15px;
+  letter-spacing: -0.005em;
 }
 
+/* ─── Components ────────────────────────────────────────────────────────────── */
 @layer components {
+
+  /* ── Buttons ── */
   .btn-primary {
-    @apply bg-gradient-to-r from-orange-500 to-red-600 text-white font-semibold px-6 py-3 rounded-xl 
-    hover:from-orange-600 hover:to-red-700 transition-all duration-200 shadow-lg hover:shadow-orange-500/25 
-    hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
+    @apply inline-flex items-center justify-center gap-2
+           px-5 py-2.5 rounded-md
+           text-sm font-semibold text-white
+           bg-blue-700 hover:bg-blue-800
+           border border-blue-800
+           transition-all duration-150
+           shadow-sm
+           disabled:opacity-40 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
-    @apply bg-white/10 text-white font-medium px-6 py-3 rounded-xl border border-white/20
-    hover:bg-white/20 transition-all duration-200 backdrop-blur-sm;
+    @apply inline-flex items-center justify-center gap-2
+           px-5 py-2.5 rounded-md
+           text-sm font-medium
+           text-gray-700 hover:text-gray-900
+           bg-white hover:bg-gray-50
+           border border-gray-300 hover:border-gray-400
+           transition-all duration-150
+           shadow-sm;
   }
 
   .btn-ghost {
-    @apply text-orange-400 font-medium px-4 py-2 rounded-lg hover:bg-orange-400/10 transition-all duration-200;
+    @apply inline-flex items-center justify-center gap-2
+           px-3 py-2 rounded-md
+           text-sm font-medium
+           text-gray-500 hover:text-gray-800
+           hover:bg-gray-100
+           transition-all duration-150;
   }
 
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2
+           px-5 py-2.5 rounded-md
+           text-sm font-semibold text-white
+           bg-red-600 hover:bg-red-700
+           border border-red-700
+           transition-all duration-150
+           shadow-sm;
+  }
+
+  /* ── Cards ── */
   .card {
-    @apply bg-white/5 border border-white/10 rounded-2xl backdrop-blur-sm;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
   }
 
+  .card-interactive {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .card-interactive:hover {
+    border-color: var(--border-default);
+    box-shadow: var(--shadow-md);
+    background: var(--bg-subtle);
+  }
+
+  /* Legacy alias */
   .card-hover {
-    @apply card hover:bg-white/10 hover:border-orange-500/30 transition-all duration-300 cursor-pointer;
+    @apply card-interactive;
   }
 
+  /* ── Inputs ── */
   .input-field {
-    @apply w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40
-    focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all duration-200;
+    @apply w-full rounded-md px-3.5 py-2.5
+           text-sm text-gray-900 placeholder-gray-400
+           border border-gray-300
+           bg-white
+           focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500
+           transition-all duration-150;
   }
 
   .textarea-field {
@@ -64,137 +162,193 @@ body {
   }
 
   .label {
-    @apply block text-sm font-medium text-white/70 mb-1.5;
+    @apply block text-xs font-medium text-gray-500 mb-1.5 tracking-wide uppercase;
   }
 
-  .section-title {
-    @apply text-2xl font-bold text-white mb-2;
-  }
-
-  .section-subtitle {
-    @apply text-white/60 mb-6;
-  }
-
-  .badge {
-    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium;
-  }
-
-  .badge-saffron {
-    @apply badge bg-orange-500/20 text-orange-300 border border-orange-500/30;
-  }
-
-  .badge-green {
-    @apply badge bg-green-500/20 text-green-300 border border-green-500/30;
-  }
-
-  .badge-blue {
-    @apply badge bg-blue-500/20 text-blue-300 border border-blue-500/30;
-  }
-
+  /* ── Navigation ── */
   .nav-link {
-    @apply flex items-center gap-2 px-4 py-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 
-    transition-all duration-200 text-sm font-medium;
+    @apply flex items-center gap-2 px-3 py-2 rounded-md
+           text-sm font-medium text-gray-500 hover:text-gray-900
+           hover:bg-gray-100 transition-all duration-150;
   }
 
   .nav-link-active {
-    @apply nav-link text-orange-400 bg-orange-500/10 hover:bg-orange-500/20;
+    @apply flex items-center gap-2 px-3 py-2 rounded-md
+           text-sm font-medium text-blue-700 bg-blue-50
+           hover:bg-blue-100 transition-all duration-150;
   }
 
-  .prose-legal {
-    @apply text-white/80 leading-relaxed;
+  /* ── Typography ── */
+  .section-title {
+    @apply text-base font-semibold text-gray-900 mb-1;
+    letter-spacing: -0.01em;
   }
 
-  .prose-legal h1 { @apply text-2xl font-bold text-white mt-6 mb-3; }
-  .prose-legal h2 { @apply text-xl font-bold text-orange-300 mt-5 mb-2; }
-  .prose-legal h3 { @apply text-lg font-semibold text-white/90 mt-4 mb-2; }
-  .prose-legal p { @apply mb-3 text-white/80; }
-  .prose-legal ul { @apply list-disc list-inside mb-3 space-y-1; }
-  .prose-legal ol { @apply list-decimal list-inside mb-3 space-y-1; }
-  .prose-legal li { @apply text-white/75; }
-  .prose-legal strong { @apply text-white font-semibold; }
-  .prose-legal code { @apply bg-white/10 px-1.5 py-0.5 rounded text-orange-300 text-sm; }
-  .prose-legal a { @apply text-orange-400 hover:text-orange-300 underline; }
-  .prose-legal blockquote { @apply border-l-4 border-orange-500/50 pl-4 text-white/60 italic; }
-  .prose-legal table { @apply w-full border-collapse mb-4; }
-  .prose-legal th { @apply text-left p-2 border border-white/10 bg-white/10 text-white font-medium text-sm; }
-  .prose-legal td { @apply p-2 border border-white/10 text-white/75 text-sm; }
-
-  .gradient-text {
-    @apply bg-gradient-to-r from-orange-400 via-red-400 to-orange-300 bg-clip-text text-transparent;
+  .section-subtitle {
+    @apply text-sm text-gray-500 mb-5;
   }
 
+  .page-title {
+    @apply text-2xl font-bold text-gray-900 mb-1;
+    letter-spacing: -0.03em;
+  }
+
+  /* ── Labels / Category Tags ── */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium tracking-wide;
+  }
+
+  .badge-indigo {
+    @apply badge bg-blue-50 text-blue-700 border border-blue-200;
+  }
+
+  .badge-saffron {
+    @apply badge bg-amber-50 text-amber-700 border border-amber-200;
+  }
+
+  .badge-green {
+    @apply badge bg-green-50 text-green-700 border border-green-200;
+  }
+
+  .badge-red {
+    @apply badge bg-red-50 text-red-700 border border-red-200;
+  }
+
+  .badge-blue {
+    @apply badge bg-blue-50 text-blue-700 border border-blue-200;
+  }
+
+  .badge-slate {
+    @apply badge bg-gray-100 text-gray-600 border border-gray-200;
+  }
+
+  /* ── India Tri-Color Bar ── */
   .india-bar {
-    @apply h-1 w-full bg-gradient-to-r from-orange-500 via-white to-green-600 rounded-full;
+    height: 3px;
+    width: 100%;
+    background: linear-gradient(to right, #FF9933 33%, #f0f0f0 33% 66%, #138808 66%);
+  }
+
+  /* ── Gradient text (kept for the wordmark) ── */
+  .gradient-text {
+    @apply text-blue-700;
+  }
+
+  .gradient-text-saffron {
+    @apply text-amber-700;
+  }
+
+  /* ── Divider ── */
+  .divider {
+    @apply h-px w-full bg-gray-200 my-4;
+  }
+
+  /* ── Section label (replaces SectionHeader uppercase text) ── */
+  .section-label {
+    @apply text-[11px] font-semibold text-gray-400 tracking-widest uppercase mb-3;
+  }
+
+  /* ── Prose for AI-generated legal content ── */
+  .prose-legal {
+    color: var(--text-secondary);
+    line-height: 1.75;
+    font-size: 0.9rem;
+  }
+
+  .prose-legal h1 { font-size: 1.1rem; font-weight: 700; color: #111827; margin-top: 1.25rem; margin-bottom: 0.6rem; letter-spacing: -0.02em; }
+  .prose-legal h2 { font-size: 0.7rem; font-weight: 600; color: #2563eb; margin-top: 1rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .prose-legal h3 { font-size: 0.875rem; font-weight: 600; color: #1f2937; margin-top: 0.75rem; margin-bottom: 0.4rem; }
+  .prose-legal p  { @apply mb-3 text-gray-600 leading-relaxed; }
+  .prose-legal ul { @apply list-none mb-3 space-y-1.5 pl-0; }
+  .prose-legal ol { @apply list-decimal list-inside mb-3 space-y-1.5; }
+  .prose-legal li { @apply text-gray-600 text-sm; }
+  .prose-legal ul li::before { content: "–"; color: #2563eb; margin-right: 0.5rem; font-size: 0.75rem; }
+  .prose-legal strong { @apply text-gray-900 font-semibold; }
+  .prose-legal code { @apply bg-gray-100 px-1.5 py-0.5 rounded text-blue-700 text-xs font-mono border border-gray-200; }
+  .prose-legal a { @apply text-blue-700 hover:text-blue-900 underline underline-offset-2; }
+  .prose-legal blockquote { border-left: 2px solid #2563eb; padding-left: 1rem; color: #6b7280; font-style: italic; margin: 0.75rem 0; }
+  .prose-legal table { @apply w-full border-collapse mb-4 text-sm; }
+  .prose-legal th { @apply text-left px-3 py-2 border border-gray-200 bg-gray-50 text-gray-700 font-medium text-xs tracking-wide uppercase; }
+  .prose-legal td { @apply px-3 py-2 border border-gray-200 text-gray-600; }
+  .prose-legal hr { @apply border-gray-200 my-4; }
+
+  /* ── Skeleton loading ── */
+  .skeleton {
+    border-radius: 4px;
+    background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.6s ease-in-out infinite;
+  }
+
+  /* ── Alert / Notice boxes ── */
+  .alert-warning {
+    @apply flex items-start gap-3 p-3.5 rounded-md
+           bg-amber-50 border border-amber-200
+           text-amber-800 text-xs leading-relaxed;
+  }
+
+  .alert-info {
+    @apply flex items-start gap-3 p-3.5 rounded-md
+           bg-blue-50 border border-blue-200
+           text-blue-800 text-xs leading-relaxed;
+  }
+
+  .alert-error {
+    @apply flex items-start gap-3 p-3.5 rounded-md
+           bg-red-50 border border-red-200
+           text-red-800 text-xs leading-relaxed;
   }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
+/* ─── Keyframes ─────────────────────────────────────────────────────────────── */
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
-::-webkit-scrollbar-track {
-  background: rgba(255,255,255,0.05);
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(255,153,51,0.3);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,153,51,0.5);
-}
-
-/* Chat message animations */
 @keyframes messageSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.message-enter {
-  animation: messageSlideIn 0.3s ease-out forwards;
-}
-
-/* Typing indicator */
 @keyframes typing {
-  0%, 60%, 100% { transform: translateY(0); }
-  30% { transform: translateY(-8px); }
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.35; }
+  30%           { transform: translateY(-4px); opacity: 1; }
 }
 
-.typing-dot {
-  animation: typing 1.4s infinite;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-.typing-dot:nth-child(2) { animation-delay: 0.2s; }
-.typing-dot:nth-child(3) { animation-delay: 0.4s; }
-
-/* Glow effects */
-.glow-orange {
-  box-shadow: 0 0 20px rgba(255, 153, 51, 0.15);
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.glow-red {
-  box-shadow: 0 0 20px rgba(230, 69, 53, 0.15);
+/* ─── Utility Classes ───────────────────────────────────────────────────────── */
+.message-enter { animation: messageSlideIn 0.22s ease-out forwards; }
+.fade-in       { animation: fadeIn 0.25s ease-out forwards; }
+.slide-up      { animation: slideUp 0.25s ease-out forwards; }
+
+.typing-dot { animation: typing 1.4s ease-in-out infinite; }
+.typing-dot:nth-child(2) { animation-delay: 0.18s; }
+.typing-dot:nth-child(3) { animation-delay: 0.36s; }
+
+/* ─── Scrollbar ─────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+/* ─── Focus Visible ─────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid rgba(37,99,235,0.5);
+  outline-offset: 2px;
 }
 
-/* Glass morphism */
-.glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.glass-dark {
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* ─── Selection ─────────────────────────────────────────────────────────────── */
+::selection {
+  background: rgba(37,99,235,0.15);
+  color: #1e40af;
 }

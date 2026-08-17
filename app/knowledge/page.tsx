@@ -205,14 +205,17 @@ export default function KnowledgePage() {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center"
+            style={{ background: '#1d4ed8' }}
+          >
             <BookOpen className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="font-bold text-white text-xl">
+            <h1 className="font-bold text-gray-900 text-xl">
               {language === 'mr' ? 'तुमचे अधिकार जाणा' : language === 'hi' ? 'अपने अधिकार जानें' : 'Know Your Rights'}
             </h1>
-            <p className="text-white/50 text-sm">
+            <p className="text-gray-500 text-sm">
               {language === 'mr' ? 'RTI, FIR, ग्राहक हक्क आणि मूलभूत अधिकार' : language === 'hi' ? 'RTI, FIR, उपभोक्ता अधिकार और मौलिक अधिकार' : 'RTI, FIR, Consumer & Fundamental Rights'}
             </p>
           </div>
@@ -223,11 +226,16 @@ export default function KnowledgePage() {
       <div className="flex flex-wrap gap-2 mb-6">
         {SECTIONS.map(section => {
           const Icon = section.icon;
+          const isActive = openSection === section.id;
           return (
             <button
               key={section.id}
               onClick={() => setOpenSection(section.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${openSection === section.id ? `bg-gradient-to-r ${section.color} text-white shadow-lg` : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white border border-white/10'}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all border ${
+                isActive
+                  ? 'bg-blue-700 text-white border-blue-700 shadow-sm'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+              }`}
             >
               <Icon className="w-4 h-4" />
               {getTitle(section)}
@@ -247,14 +255,14 @@ export default function KnowledgePage() {
               <div key={i} className="card overflow-hidden">
                 <button
                   onClick={() => toggleItem(itemId)}
-                  className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors"
+                  className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
                 >
-                  <span className="font-medium text-white text-sm pr-4">{getQ(item)}</span>
-                  {isOpen ? <ChevronUp className="w-4 h-4 text-white/40 flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-white/40 flex-shrink-0" />}
+                  <span className="font-semibold text-gray-800 text-sm pr-4">{getQ(item)}</span>
+                  {isOpen ? <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />}
                 </button>
                 {isOpen && (
-                  <div className="px-4 pb-4 border-t border-white/5 pt-3">
-                    <p className="text-white/70 text-sm leading-relaxed">{getA(item)}</p>
+                  <div className="px-4 pb-4 border-t border-gray-100 pt-3 bg-gray-50/50">
+                    <p className="text-gray-600 text-sm leading-relaxed">{getA(item)}</p>
                   </div>
                 )}
               </div>
@@ -262,16 +270,21 @@ export default function KnowledgePage() {
           })}
 
           {/* Official Links */}
-          <div className="card p-4 mt-4">
-            <h3 className="text-sm font-semibold text-white/60 mb-3 uppercase tracking-wider">
+          <div className="card p-4 mt-6">
+            <h3 className="section-label">
               {language === 'mr' ? 'अधिकृत स्रोत' : language === 'hi' ? 'आधिकारिक स्रोत' : 'Official Sources'}
             </h3>
             <div className="space-y-2">
               {section.links.map(({ name, url }) => (
-                <a key={url} href={url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center justify-between p-3 rounded-xl bg-white/3 hover:bg-white/8 border border-white/5 hover:border-orange-500/20 transition-all group">
-                  <span className="text-white/70 group-hover:text-white text-sm">{name}</span>
-                  <ExternalLink className="w-3.5 h-3.5 text-white/30 group-hover:text-orange-400 transition-colors" />
+                <a
+                  key={url}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="card-interactive flex items-center justify-between p-3 group"
+                >
+                  <span className="text-gray-700 group-hover:text-blue-700 text-sm font-medium">{name}</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-700 transition-colors" />
                 </a>
               ))}
             </div>
